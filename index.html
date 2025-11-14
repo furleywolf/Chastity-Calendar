@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chastity / Orgasms Calendar</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="language-switcher">
+            <button class="lang-btn active" onclick="switchLanguage('zh-CN')">中文</button>
+            <button class="lang-btn" onclick="switchLanguage('en-US')">English</button>
+        </div>
+        
+        <h1>Chastity / Orgasms Calendar</h1>
+        
+        <div class="calendar-controls">
+            <button id="prev-month">‹ 上一月</button>
+            <h2 id="current-month-year">2024年1月</h2>
+            <div class="data-controls">
+                <button id="export-data" title="导出数据 (Ctrl+Shift+E)">导出数据</button>
+                <button id="import-data" title="导入数据 (Ctrl+Shift+I)">导入数据</button>
+                <button id="next-month">下一月 ›</button>
+            </div>
+        </div>
+        
+        <div class="calendar-wrapper">
+            <table id="calendar">
+                <!-- 日历内容将通过JS动态生成 -->
+            </table>
+            
+            <div class="legend">
+                <h3>状态说明</h3>
+                <div class="legend-items">
+                    <div class="legend-item">
+                        <div class="color-box locked"></div>
+                        <span>锁定</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-box unlocked"></div>
+                        <span>解锁</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-box locked-ruined"></div>
+                        <span>锁定 - 破坏高潮</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-box locked-orgasm"></div>
+                        <span>锁定 - 高潮</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-box unlocked-ruined"></div>
+                        <span>解锁 - 破坏高潮</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="color-box unlocked-orgasm"></div>
+                        <span>解锁 - 高潮</span>
+                    </div>
+                </div>
+                
+                <div class="statistics">
+                    <h3>总体统计</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">锁定天数:</span>
+                            <span class="stat-value" id="locked-days">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">解锁天数:</span>
+                            <span class="stat-value" id="unlocked-days">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">破坏高潮次数:</span>
+                            <span class="stat-value" id="ruined-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">高潮次数:</span>
+                            <span class="stat-value" id="orgasm-count">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="monthly-statistics">
+                    <h3>当月统计</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">锁定天数:</span>
+                            <span class="stat-value" id="monthly-locked-days">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">解锁天数:</span>
+                            <span class="stat-value" id="monthly-unlocked-days">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">破坏高潮次数:</span>
+                            <span class="stat-value" id="monthly-ruined-count">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">高潮次数:</span>
+                            <span class="stat-value" id="monthly-orgasm-count">0</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="trends">
+                    <h3>趋势分析</h3>
+                    <div class="trend-item">
+                        <span class="trend-label">最长锁定连续天数:</span>
+                        <span class="trend-value" id="max-locked-streak">0</span>
+                    </div>
+                    <div class="trend-item">
+                        <span class="trend-label">当前锁定连续天数:</span>
+                        <span class="trend-value" id="current-locked-streak">0</span>
+                    </div>
+                    <div class="trend-item">
+                        <span class="trend-label">数据记录天数:</span>
+                        <span class="trend-value" id="total-days-recorded">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 状态选择模态框 -->
+        <div id="status-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h3 id="modal-date">选择日期状态</h3>
+                <div class="status-options">
+                    <button class="status-btn locked">锁定</button>
+                    <button class="status-btn unlocked">解锁</button>
+                    <button class="status-btn locked-ruined">锁定 - 破坏高潮</button>
+                    <button class="status-btn locked-orgasm">锁定 - 高潮</button>
+                    <button class="status-btn unlocked-ruined">解锁 - 破坏高潮</button>
+                    <button class="status-btn unlocked-orgasm">解锁 - 高潮</button>
+                    <button class="status-btn clear">清除状态</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 为导入/导出按钮添加事件监听器
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('export-data').addEventListener('click', function() {
+                // 调用script.js中定义的exportData函数
+                window.exportData && window.exportData();
+            });
+            
+            document.getElementById('import-data').addEventListener('click', function() {
+                // 调用script.js中定义的importData函数
+                window.importData && window.importData();
+            });
+        });
+    </script>
+    <script src="script.js"></script>
+    
+    <!-- 页脚 -->
+    <footer class="footer">
+        <p>Created By AI - Powered By Tail</p>
+    </footer>
+</body>
+</html>
